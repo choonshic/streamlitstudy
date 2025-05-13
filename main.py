@@ -134,7 +134,7 @@ if selected_mbti:
     for title, description in selected_jobs:
         with st.expander(title):
             st.markdown(f"💡 {description}")
-            st.balloons()
+            st.snow()
 
     st.success("🌈 당신에게 맞는 직업을 향해 한 걸음 더 가까워졌어요!")
 
