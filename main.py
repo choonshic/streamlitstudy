@@ -8,9 +8,15 @@ DATA_URL = "https://raw.githubusercontent.com/choonshic/streamlitstudy/main/seou
 
 @st.cache_data
 def load_data():
-    df = pd.read_csv(DATA_URL, encoding='cp949', skiprows=7)
+    # 인코딩 없이 utf-8로 우선 시도 → 실패 시 ISO-8859-1로 재시도
+    try:
+        df = pd.read_csv(DATA_URL, skiprows=7)
+    except UnicodeDecodeError:
+        df = pd.read_csv(DATA_URL, encoding='ISO-8859-1', skiprows=7)
+
     df.columns = ['년월', '지점', '평균기온', '평균최저기온', '평균최고기온']
-    df['년월'] = pd.to_datetime(df['년월'], format='%Y-%m')
+    df['년월'] = pd.to_datetime(df['년월'], format='%Y-%m', errors='coerce')
+    df = df.dropna(subset=['년월'])  # 날짜 파싱 실패한 행 제거
     df['연도'] = df['년월'].dt.year
     df['월'] = df['년월'].dt.month
     df['일교차'] = df['평균최고기온'] - df['평균최저기온']
