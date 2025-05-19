@@ -10,21 +10,23 @@ DATA_URL = "https://raw.githubusercontent.com/choonshic/streamlitstudy/main/seou
 @st.cache_data
 def load_data():
     try:
-        df = pd.read_csv(DATA_URL, skiprows=7)
+        df = pd.read_csv(DATA_URL)
     except UnicodeDecodeError:
-        df = pd.read_csv(DATA_URL, encoding='ISO-8859-1', skiprows=7)
+        df = pd.read_csv(DATA_URL, encoding='ISO-8859-1')
 
-    df.columns = ['연월', '지점', '평균기온', '평균최저기온', '평균최고기온']
-    df['연월'] = pd.to_datetime(df['연월'], format='%Y-%m', errors='coerce')
-    df = df.dropna(subset=['연월'])
+    # 실제 데이터 컬럼명에 맞게 설정
+    df.columns = ['년', '지점', '평균기온(℃)', '평균최저기온(℃)', '평균최고기온(℃)']
 
-    # 숫자 변환 및 일교차 계산
-    df['평균기온'] = pd.to_numeric(df['평균기온'], errors='coerce')
-    df['평균최저기온'] = pd.to_numeric(df['평균최저기온'], errors='coerce')
-    df['평균최고기온'] = pd.to_numeric(df['평균최고기온'], errors='coerce')
-    df['연도'] = df['연월'].dt.year.astype(int)
-    df['월'] = df['연월'].dt.month
+    # 타입 변환
+    df['년'] = pd.to_numeric(df['년'], errors='coerce').astype(int)
+    df['평균기온'] = pd.to_numeric(df['평균기온(℃)'], errors='coerce')
+    df['평균최저기온'] = pd.to_numeric(df['평균최저기온(℃)'], errors='coerce')
+    df['평균최고기온'] = pd.to_numeric(df['평균최고기온(℃)'], errors='coerce')
     df['일교차'] = df['평균최고기온'] - df['평균최저기온']
+
+    df.rename(columns={'년': '연도'}, inplace=True)
+    df['월'] = 1  # 히트맵용 임시 월 정보
+
     return df
 
 df = load_data()
@@ -60,19 +62,14 @@ ax2.set_ylabel(topic)
 ax2.tick_params(axis='x', labelrotation=45)
 st.pyplot(fig2)
 
-# 3. 박스플롯
+# 3. 박스플롯 (의미 없음으로 대체 텍스트 출력)
 st.subheader("3. 박스플롯")
-fig3, ax3 = plt.subplots(figsize=(10, 6))
-sns.boxplot(x='월', y=topic, data=df, ax=ax3)
-ax3.set_xlabel('월')
-ax3.set_ylabel(topic)
-ax3.tick_params(axis='x', labelrotation=45)
-st.pyplot(fig3)
+st.info("해당 데이터는 연도별 평균값만 포함하고 있어 월별 박스플롯은 의미가 없습니다.")
 
 # 4. 히트맵
 st.subheader("4. 히트맵")
 fig4, ax4 = plt.subplots(figsize=(14, 6))
-pivot = df.pivot_table(index='월', columns='연도', values=topic)
+pivot = df.pivot_table(index='월', columns='연도', values=topic, aggfunc='mean')
 if pivot.isnull().values.all():
     st.warning("히트맵을 생성할 수 없습니다. 선택한 항목에 유효한 데이터가 없습니다.")
 else:
@@ -84,10 +81,10 @@ else:
 
 # 투표 기능
 st.markdown("## ✅ 가장 효과적인 그래프는?")
-vote = st.radio("가장 잘 표현된 그래프를 선택해주세요:", ['1. 선 그래프', '2. 막대 그래프', '3. 박스플롯', '4. 히트맵'])
+vote = st.radio("가장 잘 표현된 그래프를 선택해주세요:", ['1. 선 그래프', '2. 막대 그래프', '4. 히트맵'])
 
 if 'vote_count' not in st.session_state:
-    st.session_state.vote_count = {'1': 0, '2': 0, '3': 0, '4': 0}
+    st.session_state.vote_count = {'1': 0, '2': 0, '4': 0}
 
 if st.button("투표하기"):
     st.session_state.vote_count[vote[0]] += 1
