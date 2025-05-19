@@ -13,7 +13,7 @@ def load_data():
     try:
         df = pd.read_csv(DATA_URL, skiprows=7)
     except UnicodeDecodeError:
-        df = pd.read_csv(DATA_URL, encoding='ISO-8859-1', skiprows=7)
+        df = pd.read_csv(DATA_URL, encoding='ISO-8859-1', skiprows=1)
 
     df.columns = ['년월', '지점', '평균기온', '평균최저기온', '평균최고기온']
     df['년월'] = pd.to_datetime(df['년월'], format='%Y-%m', errors='coerce')
