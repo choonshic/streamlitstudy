@@ -78,4 +78,20 @@ ax4.scatter(df['연도'], df[topic])
 ax4.set_xlabel('연도')
 ax4.set_ylabel(topic)
 ax4.set_title(f"연도별 {topic} 산점도")
-ax4.tick_params
+ax4.tick_params(axis='x', labelrotation=45)
+st.pyplot(fig4)
+
+# 투표 기능
+st.markdown("## ✅ 가장 효과적인 그래프는?")
+vote = st.radio("가장 잘 표현된 그래프를 선택해주세요:", ['1. 선 그래프', '2. 막대 그래프', '3. 원 그래프', '4. 산점도'])
+
+if 'vote_count' not in st.session_state:
+    st.session_state.vote_count = {'1': 0, '2': 0, '3': 0, '4': 0}
+
+if st.button("투표하기"):
+    st.session_state.vote_count[vote[0]] += 1
+    st.success(f"'{vote}'에 투표해주셔서 감사합니다!")
+
+with st.expander("📊 현재 투표 현황 보기"):
+    for k, v in st.session_state.vote_count.items():
+        st.write(f"{k}번 그래프: {v}표")
