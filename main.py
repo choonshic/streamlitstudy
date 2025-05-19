@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import koreanize_matplotlib  # 한글 깨짐 방지용 패키지
 
 # GitHub에서 raw CSV 불러오기
 DATA_URL = "https://raw.githubusercontent.com/choonshic/streamlitstudy/main/seoul.csv"
@@ -34,7 +35,8 @@ st.header(f"\U0001F4CA {topic} 시각화 예시")
 # 1. 선 그래프
 st.subheader("1. 선 그래프")
 fig1, ax1 = plt.subplots()
-df.groupby('연도')[topic].mean().plot(ax=ax1)
+df_line = df.groupby('연도')[topic].mean().dropna()
+ax1.plot(df_line.index, df_line.values)
 ax1.set_xlabel('연도')
 ax1.set_ylabel(topic)
 st.pyplot(fig1)
@@ -42,7 +44,8 @@ st.pyplot(fig1)
 # 2. 막대 그래프
 st.subheader("2. 막대 그래프")
 fig2, ax2 = plt.subplots()
-df.groupby('연도')[topic].mean().plot(kind='bar', ax=ax2)
+df_bar = df.groupby('연도')[topic].mean().dropna()
+ax2.bar(df_bar.index.astype(str), df_bar.values)
 ax2.set_xlabel('연도')
 ax2.set_ylabel(topic)
 st.pyplot(fig2)
