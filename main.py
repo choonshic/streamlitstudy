@@ -14,16 +14,16 @@ def load_data():
     except UnicodeDecodeError:
         df = pd.read_csv(DATA_URL, encoding='ISO-8859-1', skiprows=7)
 
-    df.columns = ['연도', '지점', '평균기온', '평균최저기온', '평균최고기온']
-    df['연도'] = pd.to_datetime(df['연도'], format='%Y-%m', errors='coerce')
-    df = df.dropna(subset=['연도'])
+    df.columns = ['연월', '지점', '평균기온', '평균최저기온', '평균최고기온']
+    df['연월'] = pd.to_datetime(df['연월'], format='%Y-%m', errors='coerce')
+    df = df.dropna(subset=['연월'])
 
     # 숫자 변환 및 일교차 계산
     df['평균기온'] = pd.to_numeric(df['평균기온'], errors='coerce')
     df['평균최저기온'] = pd.to_numeric(df['평균최저기온'], errors='coerce')
     df['평균최고기온'] = pd.to_numeric(df['평균최고기온'], errors='coerce')
-    df['연도값'] = df['연도'].dt.year.astype(int)
-    df['월'] = df['연도'].dt.month
+    df['연도'] = df['연월'].dt.year.astype(int)
+    df['월'] = df['연월'].dt.month
     df['일교차'] = df['평균최고기온'] - df['평균최저기온']
     return df
 
@@ -38,9 +38,11 @@ st.header(f"\U0001F4CA {topic} 시각화 예시")
 
 # 1. 선 그래프
 st.subheader("1. 선 그래프")
-fig1, ax1 = plt.subplots(figsize=(12, 6))
-df_line = df.groupby('연도값')[topic].mean().dropna()
-ax1.plot(df_line.index, df_line.values)
+fig1, ax1 = plt.subplots(figsize=(14, 6))
+df_line = df.groupby('연도')[topic].mean().dropna()
+ax1.plot(df_line.index, df_line.values, marker='o')
+ax1.set_xlim(1955, 2024)
+ax1.set_xticks(range(1955, 2025, 5))
 ax1.set_xlabel('연도')
 ax1.set_ylabel(topic)
 ax1.tick_params(axis='x', labelrotation=45)
@@ -48,9 +50,11 @@ st.pyplot(fig1)
 
 # 2. 막대 그래프
 st.subheader("2. 막대 그래프")
-fig2, ax2 = plt.subplots(figsize=(12, 6))
-df_bar = df.groupby('연도값')[topic].mean().dropna()
-ax2.bar(df_bar.index.astype(str), df_bar.values)
+fig2, ax2 = plt.subplots(figsize=(14, 6))
+df_bar = df.groupby('연도')[topic].mean().dropna()
+ax2.bar(df_bar.index, df_bar.values)
+ax2.set_xlim(1955, 2024)
+ax2.set_xticks(range(1955, 2025, 5))
 ax2.set_xlabel('연도')
 ax2.set_ylabel(topic)
 ax2.tick_params(axis='x', labelrotation=45)
@@ -67,8 +71,8 @@ st.pyplot(fig3)
 
 # 4. 히트맵
 st.subheader("4. 히트맵")
-fig4, ax4 = plt.subplots(figsize=(12, 6))
-pivot = df.pivot_table(index='월', columns='연도값', values=topic)
+fig4, ax4 = plt.subplots(figsize=(14, 6))
+pivot = df.pivot_table(index='월', columns='연도', values=topic)
 if pivot.isnull().values.all():
     st.warning("히트맵을 생성할 수 없습니다. 선택한 항목에 유효한 데이터가 없습니다.")
 else:
