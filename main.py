@@ -14,16 +14,16 @@ def load_data():
     except UnicodeDecodeError:
         df = pd.read_csv(DATA_URL, encoding='ISO-8859-1', skiprows=7)
 
-    df.columns = ['연월', '지점', '평균기온', '평균최저기온', '평균최고기온']
-    df['연월'] = pd.to_datetime(df['연월'], format='%Y-%m', errors='coerce')
-    df = df.dropna(subset=['연월'])
+    df.columns = ['년', '지점', '평균기온', '평균최저기온', '평균최고기온']
+    df['년'] = pd.to_datetime(df['년'], format='%Y-%m', errors='coerce')
+    df = df.dropna(subset=['년'])
 
     # 숫자 변환 및 일교차 계산
     df['평균기온'] = pd.to_numeric(df['평균기온'], errors='coerce')
     df['평균최저기온'] = pd.to_numeric(df['평균최저기온'], errors='coerce')
     df['평균최고기온'] = pd.to_numeric(df['평균최고기온'], errors='coerce')
-    df['연도'] = df['연월'].dt.year.astype(int)
-    df['월'] = df['연월'].dt.month
+    df['연도'] = df['년'].dt.year.astype(int)
+    df['월'] = df['년'].dt.month
     df['일교차'] = df['평균최고기온'] - df['평균최저기온']
     return df
 
