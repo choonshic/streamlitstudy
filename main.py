@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # GitHub에서 raw CSV 불러오기
-DATA_URL = "https://raw.githubusercontent.com/choonshic/streamlitstudy/main/seoul.csv"
+DATA_URL = "https://raw.githubusercontent.com/choonshic/streamlitstudy/seoul.csv"
 
 @st.cache_data
 def load_data():
