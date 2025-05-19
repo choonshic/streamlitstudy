@@ -9,17 +9,21 @@ DATA_URL = "https://raw.githubusercontent.com/choonshic/streamlitstudy/main/seou
 
 @st.cache_data
 def load_data():
-    # 인코딩 없이 utf-8로 우선 시도 → 실패 시 ISO-8859-1로 재시도
     try:
         df = pd.read_csv(DATA_URL, skiprows=7)
     except UnicodeDecodeError:
-        df = pd.read_csv(DATA_URL, encoding='ISO-8859-1', skiprows=1)
+        df = pd.read_csv(DATA_URL, encoding='ISO-8859-1', skiprows=7)
 
-    df.columns = ['년월', '지점', '평균기온', '평균최저기온', '평균최고기온']
-    df['년월'] = pd.to_datetime(df['년월'], format='%Y-%m', errors='coerce')
-    df = df.dropna(subset=['년월'])  # 날짜 파싱 실패한 행 제거
-    df['연도'] = df['년월'].dt.year
-    df['월'] = df['년월'].dt.month
+    df.columns = ['연도', '지점', '평균기온', '평균최저기온', '평균최고기온']
+    df['연도'] = pd.to_datetime(df['연도'], format='%Y-%m', errors='coerce')
+    df = df.dropna(subset=['연도'])
+
+    # 숫자 변환 및 일교차 계산
+    df['평균기온'] = pd.to_numeric(df['평균기온'], errors='coerce')
+    df['평균최저기온'] = pd.to_numeric(df['평균최저기온'], errors='coerce')
+    df['평균최고기온'] = pd.to_numeric(df['평균최고기온'], errors='coerce')
+    df['연도값'] = df['연도'].dt.year.astype(int)
+    df['월'] = df['연도'].dt.month
     df['일교차'] = df['평균최고기온'] - df['평균최저기온']
     return df
 
@@ -34,40 +38,44 @@ st.header(f"\U0001F4CA {topic} 시각화 예시")
 
 # 1. 선 그래프
 st.subheader("1. 선 그래프")
-fig1, ax1 = plt.subplots()
-df_line = df.groupby('연도')[topic].mean().dropna()
+fig1, ax1 = plt.subplots(figsize=(12, 6))
+df_line = df.groupby('연도값')[topic].mean().dropna()
 ax1.plot(df_line.index, df_line.values)
 ax1.set_xlabel('연도')
 ax1.set_ylabel(topic)
+ax1.tick_params(axis='x', labelrotation=45)
 st.pyplot(fig1)
 
 # 2. 막대 그래프
 st.subheader("2. 막대 그래프")
-fig2, ax2 = plt.subplots()
-df_bar = df.groupby('연도')[topic].mean().dropna()
+fig2, ax2 = plt.subplots(figsize=(12, 6))
+df_bar = df.groupby('연도값')[topic].mean().dropna()
 ax2.bar(df_bar.index.astype(str), df_bar.values)
 ax2.set_xlabel('연도')
 ax2.set_ylabel(topic)
+ax2.tick_params(axis='x', labelrotation=45)
 st.pyplot(fig2)
 
 # 3. 박스플롯
 st.subheader("3. 박스플롯")
-fig3, ax3 = plt.subplots()
+fig3, ax3 = plt.subplots(figsize=(10, 6))
 sns.boxplot(x='월', y=topic, data=df, ax=ax3)
 ax3.set_xlabel('월')
 ax3.set_ylabel(topic)
+ax3.tick_params(axis='x', labelrotation=45)
 st.pyplot(fig3)
 
 # 4. 히트맵
 st.subheader("4. 히트맵")
-fig4, ax4 = plt.subplots()
-pivot = df.pivot_table(index='월', columns='연도', values=topic)
+fig4, ax4 = plt.subplots(figsize=(12, 6))
+pivot = df.pivot_table(index='월', columns='연도값', values=topic)
 if pivot.isnull().values.all():
     st.warning("히트맵을 생성할 수 없습니다. 선택한 항목에 유효한 데이터가 없습니다.")
 else:
-    sns.heatmap(pivot, ax=ax4)
+    sns.heatmap(pivot, ax=ax4, cmap="YlOrRd")
     ax4.set_xlabel('연도')
     ax4.set_ylabel('월')
+    ax4.tick_params(axis='x', labelrotation=45)
     st.pyplot(fig4)
 
 # 투표 기능
