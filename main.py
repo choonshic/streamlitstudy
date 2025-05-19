@@ -22,7 +22,7 @@ def load_data():
     df['평균기온'] = pd.to_numeric(df['평균기온'], errors='coerce')
     df['평균최저기온'] = pd.to_numeric(df['평균최저기온'], errors='coerce')
     df['평균최고기온'] = pd.to_numeric(df['평균최고기온'], errors='coerce')
-    df['연도'] = df['년'].dt.year.astype(int)
+    df['연도'] = df['년'].dt.year.astype(float)
     df['월'] = df['년'].dt.month
     df['일교차'] = df['평균최고기온'] - df['평균최저기온']
     return df
