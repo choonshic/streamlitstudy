@@ -25,7 +25,7 @@ def load_data():
     df['일교차'] = df['평균최고기온'] - df['평균최저기온']
 
     df.rename(columns={'년': '연도'}, inplace=True)
-    df['월'] = 1  # 히트맵용 임시 월 정보
+    df['월'] = 1  # 임시 월 정보 (히트맵 제거됨)
 
     return df
 
@@ -62,34 +62,20 @@ ax2.set_ylabel(topic)
 ax2.tick_params(axis='x', labelrotation=45)
 st.pyplot(fig2)
 
-# 3. 박스플롯 (의미 없음으로 대체 텍스트 출력)
-st.subheader("3. 박스플롯")
-st.info("해당 데이터는 연도별 평균값만 포함하고 있어 월별 박스플롯은 의미가 없습니다.")
+# 3. 원 그래프 (최근 10년 비중)
+st.subheader("3. 원 그래프")
+fig3, ax3 = plt.subplots(figsize=(8, 8))
+latest_years = df[df['연도'] >= 2015]
+pie_data = latest_years.groupby('연도')[topic].mean().dropna()
+ax3.pie(pie_data, labels=pie_data.index.astype(str), autopct='%1.1f%%', startangle=90)
+ax3.set_title("최근 10년간 연도별 비중")
+st.pyplot(fig3)
 
-# 4. 히트맵
-st.subheader("4. 히트맵")
+# 4. 산점도
+st.subheader("4. 산점도")
 fig4, ax4 = plt.subplots(figsize=(14, 6))
-pivot = df.pivot_table(index='월', columns='연도', values=topic, aggfunc='mean')
-if pivot.isnull().values.all():
-    st.warning("히트맵을 생성할 수 없습니다. 선택한 항목에 유효한 데이터가 없습니다.")
-else:
-    sns.heatmap(pivot, ax=ax4, cmap="YlOrRd")
-    ax4.set_xlabel('연도')
-    ax4.set_ylabel('월')
-    ax4.tick_params(axis='x', labelrotation=45)
-    st.pyplot(fig4)
-
-# 투표 기능
-st.markdown("## ✅ 가장 효과적인 그래프는?")
-vote = st.radio("가장 잘 표현된 그래프를 선택해주세요:", ['1. 선 그래프', '2. 막대 그래프', '4. 히트맵'])
-
-if 'vote_count' not in st.session_state:
-    st.session_state.vote_count = {'1': 0, '2': 0, '4': 0}
-
-if st.button("투표하기"):
-    st.session_state.vote_count[vote[0]] += 1
-    st.success(f"'{vote}'에 투표해주셔서 감사합니다!")
-
-with st.expander("📊 현재 투표 현황 보기"):
-    for k, v in st.session_state.vote_count.items():
-        st.write(f"{k}번 그래프: {v}표")
+ax4.scatter(df['연도'], df[topic])
+ax4.set_xlabel('연도')
+ax4.set_ylabel(topic)
+ax4.set_title(f"연도별 {topic} 산점도")
+ax4.tick_params
