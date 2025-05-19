@@ -3,79 +3,72 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# -----------------------
-# 데이터 로딩
-# -----------------------
+# GitHub에서 raw CSV 불러오기
+DATA_URL = "https://raw.githubusercontent.com/choonshic/streamlitstudy/main/seoul.csv"
+
 @st.cache_data
 def load_data():
-    df = pd.read_csv('seoul_temp.csv', parse_dates=['date'])
-    df['year'] = df['date'].dt.year
-    df['month'] = df['date'].dt.month
-    df['일교차'] = df['최고기온'] - df['최저기온']
+    df = pd.read_csv(DATA_URL, encoding='cp949', skiprows=7)
+    df.columns = ['년월', '지점', '평균기온', '평균최저기온', '평균최고기온']
+    df['년월'] = pd.to_datetime(df['년월'], format='%Y-%m')
+    df['연도'] = df['년월'].dt.year
+    df['월'] = df['년월'].dt.month
+    df['일교차'] = df['평균최고기온'] - df['평균최저기온']
     return df
 
 df = load_data()
 
-# -----------------------
+st.title("서울 기온 데이터 시각화 및 그래프 투표")
+
 # 주제 선택
-# -----------------------
-topic = st.selectbox("분석 주제를 선택하세요", ['최고기온', '최저기온', '일교차'])
+topic = st.selectbox("분석할 항목을 선택하세요:", ['평균최고기온', '평균최저기온', '일교차'])
 
-# -----------------------
-# 그래프 생성 함수
-# -----------------------
-def plot_graphs(df, topic):
-    st.subheader(f"📊 {topic} 시각화 예시")
+st.header(f"\U0001F4CA {topic} 시각화 예시")
 
-    # 1. 선 그래프
-    st.markdown("### ① 선 그래프")
-    fig1, ax1 = plt.subplots()
-    df.groupby('year')[topic].mean().plot(ax=ax1)
-    st.pyplot(fig1)
+# 1. 선 그래프
+st.subheader("1. 선 그래프")
+fig1, ax1 = plt.subplots()
+df.groupby('연도')[topic].mean().plot(ax=ax1)
+ax1.set_xlabel('연도')
+ax1.set_ylabel(topic)
+st.pyplot(fig1)
 
-    # 2. 막대 그래프
-    st.markdown("### ② 막대 그래프")
-    fig2, ax2 = plt.subplots()
-    df.groupby('year')[topic].mean().plot(kind='bar', ax=ax2)
-    st.pyplot(fig2)
+# 2. 막대 그래프
+st.subheader("2. 막대 그래프")
+fig2, ax2 = plt.subplots()
+df.groupby('연도')[topic].mean().plot(kind='bar', ax=ax2)
+ax2.set_xlabel('연도')
+ax2.set_ylabel(topic)
+st.pyplot(fig2)
 
-    # 3. 박스플롯
-    st.markdown("### ③ 박스플롯")
-    fig3, ax3 = plt.subplots()
-    sns.boxplot(x='month', y=topic, data=df, ax=ax3)
-    st.pyplot(fig3)
+# 3. 박스플롯
+st.subheader("3. 박스플롯")
+fig3, ax3 = plt.subplots()
+sns.boxplot(x='월', y=topic, data=df, ax=ax3)
+ax3.set_xlabel('월')
+ax3.set_ylabel(topic)
+st.pyplot(fig3)
 
-    # 4. 히트맵
-    st.markdown("### ④ 히트맵 (월-연 평균)")
-    fig4, ax4 = plt.subplots()
-    pivot = df.pivot_table(index='month', columns='year', values=topic)
-    sns.heatmap(pivot, ax=ax4)
-    st.pyplot(fig4)
+# 4. 히트맵
+st.subheader("4. 히트맵")
+fig4, ax4 = plt.subplots()
+pivot = df.pivot_table(index='월', columns='연도', values=topic)
+sns.heatmap(pivot, ax=ax4)
+ax4.set_xlabel('연도')
+ax4.set_ylabel('월')
+st.pyplot(fig4)
 
-# -----------------------
-# 그래프 표시
-# -----------------------
-plot_graphs(df, topic)
-
-# -----------------------
 # 투표 기능
-# -----------------------
-st.markdown("## ✅ 어떤 그래프가 가장 잘 표현되었나요?")
-vote = st.radio("그래프 번호를 선택해주세요", ['① 선 그래프', '② 막대 그래프', '③ 박스플롯', '④ 히트맵'])
+st.markdown("## ✅ 가장 효과적인 그래프는?")
+vote = st.radio("가장 잘 표현된 그래프를 선택해주세요:", ['1. 선 그래프', '2. 막대 그래프', '3. 박스플롯', '4. 히트맵'])
 
-# 간단한 상태 기반 집계 (개발용: 실제 배포시 DB 또는 파일 연동 필요)
 if 'vote_count' not in st.session_state:
-    st.session_state.vote_count = {'①': 0, '②': 0, '③': 0, '④': 0}
+    st.session_state.vote_count = {'1': 0, '2': 0, '3': 0, '4': 0}
 
 if st.button("투표하기"):
-    key = vote.split(' ')[0]
-    st.session_state.vote_count[key] += 1
+    st.session_state.vote_count[vote[0]] += 1
     st.success(f"'{vote}'에 투표해주셔서 감사합니다!")
 
-# -----------------------
-# 투표 결과 보기
-# -----------------------
 with st.expander("📊 현재 투표 현황 보기"):
     for k, v in st.session_state.vote_count.items():
-        st.write(f"{k} 그래프: {v}표")
-
+        st.write(f"{k}번 그래프: {v}표")
