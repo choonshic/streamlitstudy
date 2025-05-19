@@ -62,10 +62,13 @@ st.pyplot(fig3)
 st.subheader("4. 히트맵")
 fig4, ax4 = plt.subplots()
 pivot = df.pivot_table(index='월', columns='연도', values=topic)
-sns.heatmap(pivot, ax=ax4)
-ax4.set_xlabel('연도')
-ax4.set_ylabel('월')
-st.pyplot(fig4)
+if pivot.isnull().values.all():
+    st.warning("히트맵을 생성할 수 없습니다. 선택한 항목에 유효한 데이터가 없습니다.")
+else:
+    sns.heatmap(pivot, ax=ax4)
+    ax4.set_xlabel('연도')
+    ax4.set_ylabel('월')
+    st.pyplot(fig4)
 
 # 투표 기능
 st.markdown("## ✅ 가장 효과적인 그래프는?")
